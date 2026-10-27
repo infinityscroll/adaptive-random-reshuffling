@@ -1,0 +1,781 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+\setlength{\emergencystretch}{1em}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Prob}{\mathbb P}
+\newcommand{\ip}[2]{\langle #1,#2\rangle}
+\newcommand{\norm}[1]{\lVert #1\rVert}
+\newcommand{\dist}{\operatorname{dist}}
+\newcommand{\Risk}{\mathcal R}
+\newcommand{\Class}{\mathcal F}
+\newcommand{\Pol}{\mathcal P}
+\title{Adaptive random reshuffling:\\a matching worst-case lower bound}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Consider random reshuffling of a smooth convex finite sum with $n$
+components over $K$ epochs. We prove a matching worst-case lower bound
+when every update uses a positive scalar step at most $1/L$ and the
+output is any scalar convex combination of the actual iterates. Steps
+and output weights may depend on the instance, private randomness, and
+even the entire bank of sampled permutations. For every parameter tuple,
+one instance of dimension at most $n$ is hard for all such choices.
+Its lower bound is a universal constant times
+\[
+ \min\!\left\{LD^2,\frac{LD^2}{nK}
+ +\min\!\left\{\frac{\sigma D}{\sqrt{nK}},
+       \left(\frac{L\sigma^2D^4}{nK^2}\right)^{1/3}\right\}\right\}.
+\]
+The matching upper bound follows from Liu's constant-step,
+pre-update-average guarantee and the option of returning the initial
+point. The lower uses regular-simplex offsets, a squared-distance cone
+potential, and a pathwise interval estimate that pays for every
+auxiliary reset. A shortest-maximizing-interval argument controls the
+endpoint terms without imposing confinement on the actual trajectory.
+\end{abstract}
+
+\section{Model and result}
+
+Fix integers $n\ge2$, $K\ge1$, put $T=nK$, and let $L>0$ and
+$D,\sigma\ge0$. The class $\Class(n,L,D,\sigma)$ consists of instances
+in arbitrary finite-dimensional Euclidean spaces with differentiable
+convex components $f_1,\ldots,f_n$ such that
+\begin{equation}\label{eq:class}
+ \norm{\nabla f_i(x)-\nabla f_i(y)}\le L\norm{x-y},\qquad
+ f=\frac1n\sum_{i=1}^n f_i,\qquad
+ x_*\in\arg\min f,
+\end{equation}
+and specified initial point $x_0$ satisfying
+\begin{equation}\label{eq:parameters}
+ \norm{x_0-x_*}\le D,\qquad
+ \frac1n\sum_{i=1}^n\norm{\nabla f_i(x_*)}^2\le\sigma^2.
+\end{equation}
+No global bound on gradient disagreement is imposed. Individual
+components need not be bounded below in the class definition.
+
+Let $\omega=(\pi_1,\ldots,\pi_K)$ consist of independent uniform
+permutations of $\{1,\ldots,n\}$. If $t=en+j$ with $0\le e<K$ and
+$0\le j<n$, write $i_t=\pi_{e+1}(j+1)$. We study the literal updates
+\begin{equation}\label{eq:algorithm}
+ x_{t+1}=x_t-\eta_t\nabla f_{i_t}(x_t),\qquad
+ 0<\eta_t\le\frac1L,
+\end{equation}
+and outputs
+\begin{equation}\label{eq:output}
+ \widehat x=\sum_{t=0}^T w_t x_t,
+ \qquad w_t\ge0,\qquad \sum_{t=0}^T w_t=1.
+\end{equation}
+For the lower bound we allow $\eta_t$ and $w_t$ to be arbitrary
+measurable functions of the instance, $\omega$, and an arbitrary private
+seed independent of $\omega$. The constraints in
+\eqref{eq:algorithm}--\eqref{eq:output} need hold only almost surely.
+In particular, the selection may use the whole permutation bank before
+the first update. This contains policies that see only the current
+epoch's permutation and choose a step after observing the current
+gradient. The choice of scalar step and convex output is unrestricted
+within this model; the update direction and sampled order remain those
+in \eqref{eq:algorithm}. Expectations of the nonnegative loss are
+understood in the extended sense.
+
+Define
+\begin{align}
+ A_0&=LD^2,& B_0&=\frac{LD^2}{T},\notag\\
+ N_1&=\frac{\sigma D}{\sqrt T},&
+ N_2&=\left(\frac{L\sigma^2D^4}{nK^2}\right)^{1/3},\label{eq:rates}\\
+ N&=\min\{N_1,N_2\},&
+ \Psi&=\min\{A_0,B_0+N\}.\notag
+\end{align}
+
+\begin{theorem}\label{thm:main}
+For each $n\ge2$, $K\ge1$, $L>0$, and $D,\sigma\ge0$, there is one
+instance in $\Class(n,L,D,\sigma)$, of dimension at most $n$, such that
+every selection in \eqref{eq:algorithm}--\eqref{eq:output} satisfies
+\begin{equation}\label{eq:lower}
+ \E\bigl[f(\widehat x)-f(x_*)\bigr]\ge\frac{\Psi}{524288}.
+\end{equation}
+The instance is chosen before the seed space, seed law, and step/output
+selection. Conversely, a parameter-dependent constant-step procedure,
+using either the uniform pre-update average or the initial point,
+satisfies the class-uniform upper bound $57\Psi$.
+\end{theorem}
+
+The dimension bound concerns the hard witness, not the definition of
+$\Class$. For any fixed private-seed probability space, let $\Pol$
+be the class of instance-dependent selections above, and let
+$\Risk(I,P)$ denote their expected actual loss. The theorem gives
+\begin{equation}\label{eq:minimax}
+ \frac{\Psi}{524288}
+ \le\sup_{I\in\Class}\inf_{P\in\Pol}\Risk(I,P)
+ \le\inf_{P\in\Pol}\sup_{I\in\Class}\Risk(I,P)
+ \le57\Psi.
+\end{equation}
+The lower is uniform even over the enlarged full-bank policy class.
+The upper uses one procedure from its much smaller constant-step
+subclass. Neither an upper for every policy nor equality of the two
+minimax values is asserted.
+
+\paragraph{Relation to previous results.}
+Liu~\cite{liu2026} establishes the smooth-convex upper rate used here,
+including a theorem for steps that vary by epoch. The powers of the
+parameters in \eqref{eq:rates} are therefore inherited. Cha, Lee, and
+Yun~\cite{cha2023} prove constant-step lower bounds for weighted
+epoch-iterate outputs, as well as results for chosen permutations.
+Rajput, Lee, and Papailiopoulos~\cite{rajput2022} give fixed-instance
+constant-step obstructions and discuss variable-step lower bounds.
+Thus fixed-instance constructions, weighted-output lower bounds, and
+the cubic noise rate are prior ingredients. The cone witness below
+itself has globally bounded gradient disagreement,
+$\norm{\nabla f_i(x)-\nabla f(x)}=\sigma$; weakening that assumption
+is not a contribution of the construction. The claim here is a
+matching lower for adaptive scalar updates, all-state convex outputs,
+and all $n,K$ and parameter regimes under a uniform smoothness bound
+$L$. It addresses the optimized-rate part of the lower-bound question
+in Liu's Section~5; it does not give the risk profile of every
+prescribed schedule, match the separate nonuniform-smoothness
+refinements, or settle every question posed there. It also does not
+cover momentum, vector-valued
+preconditioners, extra update directions, or outputs outside the convex
+hull of the iterates.
+
+\section{The inherited upper bound}
+
+Theorem~1 of Liu~\cite{liu2026}, with all component smoothness bounds
+set to $L$, implies that a constant $0<\eta\le1/(6L)$ and the
+\emph{pre-update} average
+\begin{equation}\label{eq:preaverage}
+ \overline x=\frac1T\sum_{t=0}^{T-1}x_t
+\end{equation}
+satisfy
+\begin{equation}\label{eq:liu}
+ \E[f(\overline x)-f(x_*)]
+ \le\frac{6D^2}{\eta T}
+       +51\sigma^2\min\{\eta,nL\eta^2\}.
+\end{equation}
+This is precisely an admissible output in \eqref{eq:output}, with
+$w_T=0$. In particular it is not an epoch-end average or a final-iterate
+guarantee.
+
+For $D,\sigma>0$, use either
+\[
+ \eta_1=\min\!\left\{\frac1{6L},\frac{D}{\sigma\sqrt T}\right\},
+ \qquad
+ \eta_2=\min\!\left\{\frac1{6L},
+       \left(\frac{D^2}{nL\sigma^2T}\right)^{1/3}\right\}.
+\]
+Since the reciprocal of a minimum is a maximum, \eqref{eq:liu}
+gives respectively $36B_0+57N_1$ and $36B_0+57N_2$. Choosing the
+smaller noise branch gives at most $57(B_0+N)$. Smoothness of the mean
+and $\nabla f(x_*)=0$ also give
+$f(x_0)-f(x_*)\le A_0/2$. Choosing between this initial-point output
+and \eqref{eq:preaverage}, using only the parameters, yields
+\[
+ \min\{A_0/2,57(B_0+N)\}\le57\Psi.
+\]
+When $\sigma=0<D$, use $\eta=1/(6L)$ and the same initial-point
+option. When $D=0$, return $x_0$ while taking any legal positive steps.
+These cases require no division by zero. This proves the upper part of
+Theorem~\ref{thm:main} from the cited result. The remainder proves the
+lower independently of \eqref{eq:liu}.
+
+\section{A legal cone instance in every component count}
+
+For now assume $D,\sigma>0$. Set $\theta=2^{-14}$ and choose
+$0<\ell\le L$ with
+\begin{equation}\label{eq:scale-condition}
+ \sigma^2K\ge\ell^2D^2n.
+\end{equation}
+The final choice of $\ell$ will cover every parameter regime. Put
+\begin{align}
+ \mu&=\theta\min\!\left\{\ell,\frac{\sigma}{D\sqrt T},
+       \left(\frac{\ell\sigma^2}{nK^2D^2}\right)^{1/3}\right\},
+ &a&=\sqrt{\frac\mu\ell},\label{eq:mu}\\
+ \beta&=\frac{\ell}{4(1+a^2)},&
+ b&=\beta a,& H&=\mu+ba.\label{eq:coefficients}
+\end{align}
+
+\subsection{Fixed regular-simplex blocks}
+For $n=2$ take a single block of size two. For $n\ge3$, write
+$n=3q+j$, $j\in\{0,1,2\}$. If $j=0$, take $q$ blocks of size
+three. If $j=1$ or $j=2$, take respectively one block of size four or
+five and $q-1$ blocks of size three. This includes $n=3,4,5$ without
+an exceptional construction. If $r$ is the number of blocks, then
+\begin{equation}\label{eq:block-count}
+ r\le n/3\quad(n\ge3),\qquad r\le n/2\quad(n\ge2).
+\end{equation}
+All blocks and label assignments are fixed before any permutations.
+
+For a block of size $m$, use the zero-sum subspace of $\R^m$ and the
+vectors
+\begin{equation}\label{eq:simplex}
+ \xi_i=\sqrt{\frac m{m-1}}
+       \left(e_i-\frac1m\mathbf1\right),\qquad 1\le i\le m.
+\end{equation}
+They have norm one, sum zero, and satisfy
+$\ip{\xi_i}{\xi_j}=-1/(m-1)$ for $i\ne j$. Different blocks occupy
+orthogonal subspaces. Their direct sum $V$ has dimension $n-r$.
+The same notation $\xi_i$ denotes the resulting fixed vectors indexed
+by the original $n$ labels.
+
+\subsection{Objective and actual gradients}
+On the Euclidean product $\R\oplus V$, define the closed convex cone
+and potential
+\begin{align}
+ \mathcal C_a&=\{(u,v):\norm v\le-au\},\notag\\
+ \Phi(u,v)&=\frac\mu2u^2+\frac\ell8\norm v^2
+                 +\frac\ell8\dist((u,v),\mathcal C_a)^2,\label{eq:potential}\\
+ f_i(u,v)&=\Phi(u,v)+\sigma\ip{\xi_i}{v},
+ &x_0&=(-D,0).\label{eq:components}
+\end{align}
+The mean is exactly $\Phi$, with minimizer $(0,0)$. We recall the
+projection fact used to check global regularity. For a nonempty closed
+convex set $C$, its projection $P_C$ satisfies
+$\ip{x-P_Cx}{z-P_Cx}\le0$ for $z\in C$. Applying this twice shows
+that $r(x)=x-P_Cx$ is $1$-Lipschitz. If
+$g(x)=\norm{r(x)}^2/2$, comparison with the fixed competitors $P_Cx$
+and $P_Cy$ gives
+\[
+ g(y)\le g(x)+\ip{r(x)}{y-x}+\tfrac12\norm{y-x}^2,\qquad
+ g(y)\ge g(x)+\ip{r(y)}{y-x}-\tfrac12\norm{y-x}^2.
+\]
+It follows that $\nabla g=r$. Convexity follows by using a convex
+combination of the two projected points as a feasible competitor.
+Since $\mu\le\theta\ell<\ell/4$, the quadratic
+part of \eqref{eq:potential} has gradient Lipschitz constant $\ell/4$.
+The distance term contributes another $\ell/4$. Thus all components
+are convex and globally $\ell/2$-smooth, hence $L$-smooth. Their
+gradients at zero are $(0,\sigma\xi_i)$, so the variance in
+\eqref{eq:parameters} is exactly $\sigma^2$. The initial distance is
+$D$, and the dimension is $n-r+1\le n$. In fact these components are
+bounded below, although the public class does not require it.
+
+Write a reachable point as $(-q,v)$, with $q>0$ and $R=\norm v$.
+If $R\le aq$, it is in the cone. Otherwise its projection is
+\begin{equation}\label{eq:projection}
+ \left(-\widehat q,\frac{a\widehat q}{R}v\right),
+ \qquad \widehat q=\frac{q+aR}{1+a^2}.
+\end{equation}
+For completeness, at a fixed candidate slow coordinate $-s$, $s\ge0$,
+the nearest fast point is the projection of $v$ onto the ball of radius
+$as$. Minimizing $(s-q)^2+(R-as)_+^2$ gives
+\eqref{eq:projection} in the outside case; here
+$0<\widehat q<R/a$. This also verifies the formula at the boundary
+by continuity.
+
+Consequently the \emph{actual} update for current offset $\xi$ is
+\begin{align}
+ q'&=(1-\mu\eta)q+b\eta(R-aq)_+,
+ &v'&=(1-d\eta)v-\sigma\eta\xi,\label{eq:dynamics}\\
+ d&=\frac\ell4+\beta\frac{(R-aq)_+}{R}.\notag
+\end{align}
+The fraction is defined to be zero at $R=0$. In particular,
+\begin{equation}\label{eq:retention-basic}
+ \frac\ell4\le d\le\frac\ell2,\qquad
+ \rho:=1-d\eta\ge\frac12,\qquad
+ q'\ge(1-\mu\eta)q>0.
+\end{equation}
+These inequalities use the original cap $\eta\le1/L\le1/\ell$.
+Starting from $q_0=D$, they justify the reachable-state formulas at
+every update, for every legal selection.
+
+\begin{lemma}[Radius and energy]\label{lem:energy}
+Every actual path satisfies $R_t\le4\sigma/\ell$. On every interval
+$J=[s,t)\subseteq[0,T)$, with
+$S_J=\sum_{k\in J}\eta_k$ and $W_J=\sum_{k\in J}\eta_kR_k$,
+\begin{equation}\label{eq:energy}
+ \sum_{k\in J}\eta_k^2
+ \le\frac{R_t^2-R_s^2}{\sigma^2}+\frac{6W_J}{\sigma}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+The norm update gives
+$R'\le(1-\ell\eta/4)R+\sigma\eta$. The asserted radius follows
+by induction from $R_0=0$. Moreover,
+\begin{align*}
+ R'^2-R^2
+ &=-(2d\eta-d^2\eta^2)R^2
+       -2\rho\sigma\eta\ip v\xi+\sigma^2\eta^2\\
+ &\ge\sigma^2\eta^2-\ell\eta R^2-2\sigma\eta R
+ \ge\sigma^2\eta^2-6\sigma\eta R.
+\end{align*}
+Sum this inequality over the actual interval. No conditional
+expectation or independence of the step and label is used.
+\end{proof}
+
+\section{Dual tables from the sampled permutations}
+
+Fix the entire permutation bank. In one epoch, a block of size $m$
+occupies positions $p_1<\cdots<p_m$ in $\{0,\ldots,n-1\}$. Choose
+a largest consecutive gap $g=p_{k+1}-p_k$, with deterministic
+tie-breaking, and let $E$ be its $k$ earlier labels. Set
+$z=\sum_{i\in E}\xi_i$. The fixed simplex identities give
+\[
+ \ip z{\xi_i}=\begin{cases}(m-k)/(m-1),&i\in E,\\
+                         -k/(m-1),&i\notin E,
+             \end{cases}\qquad
+ \norm z^2=\frac{k(m-k)}{m-1}.
+\]
+Use dual vectors
+\begin{equation}\label{eq:dual-endpoints}
+ \phi^-=\frac{m-1}{m-k}z,\qquad
+ \phi^+=-\frac{m-1}{k}z.
+\end{equation}
+Keep $\phi^-$ up to $p_k$, interpolate linearly to $\phi^+$ across
+the gap, and keep $\phi^+$ thereafter.
+There is no hit from this block inside the chosen gap. Hence the dual
+has inner product one with each actual offset at its hit position.
+Also
+\[
+ \norm{\phi^-}^2=\frac{(m-1)k}{m-k},\quad
+ \norm{\phi^+}^2=\frac{(m-1)(m-k)}k,\quad
+ \norm{\phi^+-\phi^-}
+   =m\sqrt{\frac{m-1}{k(m-k)}}\le m.
+\]
+For $2\le m\le5$, the endpoint norms are at most $4$ and the
+change is at most $5$.
+
+Taking the orthogonal direct sum over all blocks gives a dual
+$\phi_t$ at every update position such that
+\begin{equation}\label{eq:dual-bounds}
+ \ip{\phi_t}{\xi_{i_t}}=1,\qquad
+ \norm{\phi_t}\le4\sqrt r,\qquad
+ |\ip{\phi_t}{\xi_i}|\le4\quad\hbox{for every original label }i.
+\end{equation}
+The last bound holds even when the label and the dual time differ.
+This fact is needed when paying for resets.
+
+Write $g_{e,j}$ for the selected gap of block $j$ in epoch $e$, and
+define
+\begin{equation}\label{eq:geometry}
+ B_e=\sum_{j=1}^r\frac1{g_{e,j}},\qquad
+ G_A(\omega)=A\left[8K\sqrt r+
+             5\sqrt{n-1}\sum_{e=1}^K\sqrt{B_e}\right].
+\end{equation}
+Within an epoch, the squared variation of block $j$ is at most
+$25/g_{e,j}$. Orthogonality and Cauchy--Schwarz therefore give
+\begin{equation}\label{eq:variation}
+ \sum_{\text{internal }t}\norm{\phi_{t+1}-\phi_t}^2\le25B_e,\qquad
+ \sum_{\text{internal }t}\norm{\phi_{t+1}-\phi_t}
+       \le5\sqrt{(n-1)B_e}.
+\end{equation}
+An epoch-boundary jump has norm at most $8\sqrt r$. Thus for any
+interval $[s,t)$ and any vectors $z_s,\ldots,z_t$ bounded in norm by
+$A$, summation by parts gives
+\begin{equation}\label{eq:sbp}
+ \left|\sum_{k=s}^{t-1}\ip{\phi_k}{z_k-z_{k+1}}\right|
+ \le G_A(\omega).
+\end{equation}
+Indeed the two endpoints cost at most $8A\sqrt r$, at most $K-1$
+boundary jumps cost $8A(K-1)\sqrt r$, and the internal variations
+are bounded by \eqref{eq:variation}. This is simultaneous over all
+intervals and all such vector sequences.
+
+\begin{lemma}[Expected geometry]\label{lem:geometry}
+For every $n\ge2$, $\E B_e\le4$, and for deterministic $A\ge0$,
+\begin{equation}\label{eq:meanG}
+ \E G_A\le16AK\sqrt n.
+\end{equation}
+\end{lemma}
+\begin{proof}
+For $n\ge3$, fix any three labels of a block. Their positions form
+a uniform three-element subset: each position subset is realized by
+$3!(n-3)!$ of the $n!$ permutations. If its span is $s$, there are
+$(n-s)(s-1)$ such subsets, so
+\[
+ \E\frac1s
+ =\binom{n}{3}^{-1}\sum_{s=2}^{n-1}\frac{(n-s)(s-1)}s
+ \le\binom{n}{3}^{-1}\frac{(n-1)(n-2)}2=\frac3n.
+\]
+The outer span of the whole block is at least $s$, and its largest
+gap is at least its outer span divided by $m-1\le4$. Thus
+$\E(1/g_{e,j})\le12/n$. By \eqref{eq:block-count},
+$\E B_e\le4$. For $n=2$ there is one gap, equal to one.
+Finally Jensen gives $\E\sqrt{B_e}\le2$, and
+\[
+ \E G_A\le AK\bigl(8\sqrt{n/2}+10\sqrt{n-1}\bigr)
+ <16AK\sqrt n
+\]
+when $A>0$. The non-strict version also covers $A=0$.
+Only the marginal positions of fixed labels were used. The duals may
+be correlated with every action of the policy.
+\end{proof}
+
+\section{Paying for excursions of the actual trajectory}
+
+The next estimate is pathwise. Fix a bank, a legal realized trajectory,
+an interval $J=[s,t)$, and deterministic $h,A>0$ with $A>\sigma h$.
+Keep update $k$ if
+\begin{equation}\label{eq:keep}
+ \eta_k<h,\qquad R_k\le A,\qquad R_{k+1}\le A,
+\end{equation}
+and remove the other updates. Subscripts $\mathrm{keep}$ and
+$\mathrm{rem}$ denote the corresponding partial sums.
+
+\begin{lemma}[Paid auxiliary resets]\label{lem:paid}
+For every such interval,
+\begin{equation}\label{eq:paid}
+ S_{\mathrm{keep}}\le\frac{G_A}{\sigma}+4S_{\mathrm{rem}}
+       +\frac{2\ell\sqrt r}{\sigma}W_J
+       +\frac{4\sqrt r}{\sigma}R_s.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Construct an auxiliary sequence solely for accounting. Set $z_s=v_s$
+if $R_s\le A$, and $z_s=0$ otherwise. Copy the actual path on kept
+updates. During each maximal removed run freeze the auxiliary sequence
+until the run's final update. If the actual state at the run's endpoint
+has radius at most $A$, reset there to that state. Otherwise leave it
+frozen. Such an unsafe endpoint can occur only on a terminal removed
+run: a following kept update would require that same state to be safe.
+Thus the construction agrees with $v$ at both endpoints of every kept
+update and remains within radius $A$ at every time.
+
+For a removed run ending safely, the reset displacement is the sum of
+the actual fast increments along the run. The sole possible additional
+term is $v_s$, when the first run starts at an unsafe initial state.
+Test the reset against the dual at its final update. For every update
+inside that run, \eqref{eq:dynamics} and the all-label bound in
+\eqref{eq:dual-bounds} give
+\[
+ |\ip{\phi_j}{v_{k+1}-v_k}|
+ \le4\sigma\eta_k+2\ell\sqrt r\,\eta_kR_k
+ \quad\hbox{for every test time }j.
+\]
+Consequently all reset charges together are at most
+\begin{equation}\label{eq:reset-payment}
+ 4\sigma S_{\mathrm{rem}}+2\ell\sqrt r\,W_{\mathrm{rem}}
+       +4\sqrt r\,R_s.
+\end{equation}
+Every removed actual increment is charged at most once. On a kept
+update, \eqref{eq:dual-bounds} yields the exact identity
+\[
+ \sigma\eta_k=\ip{\phi_k}{z_k-z_{k+1}}
+                  -d_k\eta_k\ip{\phi_k}{v_k}.
+\]
+Sum over kept updates, insert the fully paid resets, and use
+\eqref{eq:sbp}. The kept drift terms cost at most
+$2\ell\sqrt r\,W_{\mathrm{keep}}$. Combining with
+\eqref{eq:reset-payment} and dividing by $\sigma$ proves
+\eqref{eq:paid}.
+
+This auxiliary sequence is not a modified algorithm. In particular no
+actual state is reset or projected, no excursion is discarded without
+payment, and a removed run may cross epoch boundaries. The argument
+works for intervals and keep/remove choices selected after the full
+trajectory has been seen.
+\end{proof}
+
+\subsection{An unrestricted interval estimate}
+Set $C=HD$ and choose
+\begin{equation}\label{eq:thresholds}
+ b_0=b-\frac{2C\ell\sqrt r}{\sigma},\qquad
+ h=\frac{120C}{b_0\sigma},\qquad A=\frac{130C}{b_0}.
+\end{equation}
+We first check that these expressions are positive. From
+\eqref{eq:scale-condition} and the linear cap in \eqref{eq:mu},
+\[
+ a^2\le\theta,\qquad
+ a^2\le\frac{\theta\sigma^2}{\ell^2D^2n},\qquad
+ \frac Hb=a(5+4a^2).
+\]
+Together with $r\le n/2$, these give
+\[
+ \frac{2C\ell\sqrt r}{\sigma b}
+ \le2(5+4\theta)\sqrt{\theta/2}<\frac1{16}.
+\]
+For the last inequality, use $5+4\theta<21/4$ and
+$\sqrt\theta=1/128$, obtaining $21/(256\sqrt2)<1/16$.
+In particular,
+\begin{equation}\label{eq:b0}
+ \frac{15b}{16}\le b_0\le b,\qquad
+ A-\sigma h=\frac{10C}{b_0}>0.
+\end{equation}
+
+\begin{lemma}[All intervals]\label{lem:interval}
+With \eqref{eq:thresholds}, every actual interval $J=[s,t)$ satisfies
+\begin{equation}\label{eq:interval}
+ C S_J-bW_J
+ \le\frac{C G_A}{\sigma}
+       +\frac{4C\sqrt r}{\sigma}R_s
+       +\frac{b_0}{24\sigma}R_t^2.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Add $S_{\mathrm{rem}}$ to \eqref{eq:paid}, multiply by $C$, and
+subtract $bW_J$. The result is
+\begin{equation}\label{eq:preinterval}
+ CS_J-bW_J\le\frac{CG_A}{\sigma}
+       +\frac{4C\sqrt r}{\sigma}R_s
+       +5CS_{\mathrm{rem}}-b_0W_J.
+\end{equation}
+Every large update, meaning $\eta_k\ge h$, is removed. By
+Lemma~\ref{lem:energy},
+\begin{align}
+ 5CS_{\mathrm{large}}
+ &\le\frac{5C}{h}\sum_{k\in J}\eta_k^2\notag\\
+ &\le\frac{b_0}{24\sigma}(R_t^2-R_s^2)
+                  +\frac{b_0}4 W_J.\label{eq:large}
+\end{align}
+This is valid even if $h>1/L$ and there are no large updates: the
+right-hand bracket before multiplying by $5C/h$ is nonnegative by
+\eqref{eq:energy}.
+
+A small removed update has at least one unsafe endpoint. Since
+$R_{k+1}\le R_k+\sigma\eta_k$, its pre-update radius satisfies
+$R_k>A-\sigma h=10C/b_0$. Therefore
+\begin{equation}\label{eq:small}
+ 5CS_{\mathrm{small,rem}}\le\frac{b_0}2W_{\mathrm{small,rem}}.
+\end{equation}
+Insert \eqref{eq:large}--\eqref{eq:small} into
+\eqref{eq:preinterval}. The remaining weighted-radius terms are
+nonpositive, as is the starting-energy term. Dropping them proves
+\eqref{eq:interval}.
+\end{proof}
+
+\section{Endpoint trimming and a bank-only certificate}
+
+For an actual path define its maximal interval deficit
+\begin{equation}\label{eq:path-deficit}
+ Z_{\mathrm{path}}=\max\!\left\{0,
+       \max_{0\le s<t\le T}\sum_{k=s}^{t-1}\eta_k(C-bR_k)\right\}.
+\end{equation}
+The global radius bound alone is too costly in the endpoint terms of
+\eqref{eq:interval}. The following finite selection argument retains
+small endpoints instead.
+
+\begin{lemma}[Endpoint trim]\label{lem:trim}
+Every legal path for a fixed bank satisfies
+\begin{equation}\label{eq:certificate}
+ Z_{\mathrm{path}}\le\mathcal Z(\omega):=
+ \frac CL+\frac{C G_A(\omega)}{\sigma}
+       +\frac{4C^2\sqrt r}{\sigma b}+\frac{C^2}{24\sigma b}.
+\end{equation}
+The certificate $\mathcal Z$ is nonnegative and depends only on the
+parameters and permutation bank, not on the steps or output.
+\end{lemma}
+\begin{proof}
+If $Z_{\mathrm{path}}>0$, choose a shortest interval attaining it.
+Its first and last increments are strictly positive: a negative
+endpoint could be deleted to increase the maximum, while a zero
+endpoint could be deleted without changing it. As all steps are
+positive, $R_s<C/b$ and $R_{t-1}<C/b$.
+
+Delete the final update, whose contribution is at most $C/L$. If the
+remainder is empty, this already bounds the maximum. Otherwise apply
+\eqref{eq:interval} to $[s,t-1)$. Its initial and final state radii
+are both less than $C/b$. Using $b_0\le b$ gives the three remaining
+terms of \eqref{eq:certificate}. The case $Z_{\mathrm{path}}=0$ is
+immediate. This argument conditions on no selected endpoint event.
+\end{proof}
+
+\begin{lemma}[Mean certificate]\label{lem:mean-certificate}
+The construction satisfies
+\begin{equation}\label{eq:small-certificate}
+ \E\mathcal Z<\frac D{128}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+By \eqref{eq:b0}, $A\le2080C/(15b)$. Use
+Lemma~\ref{lem:geometry}, $\sqrt r\le K\sqrt n$, and
+$1\le K\sqrt n$ in \eqref{eq:certificate} to obtain
+\begin{align}
+ \frac{\E\mathcal Z}{D}
+ &\le\frac HL+
+   \left(\frac{33280}{15}+4+\frac1{24}\right)
+             \frac{H^2DK\sqrt n}{\sigma b}\notag\\
+ &=\frac HL+\frac{53345}{24}
+             \frac{H^2DK\sqrt n}{\sigma b}.\label{eq:certificate-mean}
+\end{align}
+The coefficients in \eqref{eq:coefficients} obey
+\begin{equation}\label{eq:H-b}
+ H\le\frac54\mu,\qquad
+ \frac{H^2}{b}\le\frac{25}{4}(1+\theta)
+                     \frac{\mu^{3/2}}{\sqrt\ell}
+                  <7\frac{\mu^{3/2}}{\sqrt\ell}.
+\end{equation}
+The linear and cubic caps defining $\mu$ therefore imply
+\[
+ \frac{\E\mathcal Z}{D}
+ <\frac54\theta+7\theta^{3/2}\frac{53345}{24}<\frac1{128}.
+\]
+For a finite check, $53345/24<2240$, so the middle expression is
+less than $(160+15680)/2^{21}<1/128$.
+\end{proof}
+
+\section{Retention of every state and adaptive output}
+
+For a pre-state with $q_k\le D$, \eqref{eq:dynamics} gives
+\begin{equation}\label{eq:slow-drop}
+ q_{k+1}\ge q_k-C\eta_k+b\eta_kR_k.
+\end{equation}
+Indeed $(R-aq)_+\ge R-aq$ and $C=(\mu+ba)D$.
+
+\begin{proposition}\label{prop:cone-risk}
+For the one cone instance above, every allowed selection satisfies
+\begin{equation}\label{eq:cone-risk}
+ \E\Phi(\widehat x)\ge\frac{\mu D^2}{16}.
+\end{equation}
+\end{proposition}
+\begin{proof}
+Suppose an actual state first falls below $D/2$ at time $t$. If there
+is no earlier state with $q_j>D$, put $s=0$. Otherwise let $j<t$ be
+the last such time and put $s=j+1$. In this second case,
+\eqref{eq:retention-basic} implies
+$q_s>(1-\mu/L)D$; in the first case $q_s=D$. Since
+$\mu/L\le\theta<1/4$, we have $s<t$. All pre-states in $[s,t)$
+satisfy $q_k\le D$. Summing \eqref{eq:slow-drop} shows
+\[
+ Z_{\mathrm{path}}\ge\sum_{k=s}^{t-1}\eta_k(C-bR_k)
+          \ge q_s-q_t>(1/2-\mu/L)D>D/4.
+\]
+By Lemma~\ref{lem:trim}, on every bank with
+$\mathcal Z(\omega)\le D/4$ \emph{all} legal selections have
+$q_t\ge D/2$ for every $0\le t\le T$. This event is independent
+of the choice of policy in the sense that its definition involves
+only the bank; no statistical independence of actions is needed.
+Markov's inequality and \eqref{eq:small-certificate} give
+\[
+ \Prob\{\mathcal Z>D/4\}<1/32.
+\]
+Every scalar convex output on the complementary event has slow
+coordinate $-\widehat q$ with $\widehat q\ge D/2$, even when the
+weights use the entire trajectory and seed. Since
+$\Phi(u,v)\ge\mu u^2/2$ and $\Phi\ge0$ everywhere,
+\[
+ \E\Phi(\widehat x)\ge\frac{31}{32}\frac{\mu D^2}{8}
+                         \ge\frac{\mu D^2}{16}.
+\]
+For product-almost-everywhere legal selectors, the same argument
+applies outside their null set. Continuity of the actual gradients
+and measurable selectors makes the finitely many states and the loss
+measurable. Nonnegative integration requires no additional
+integrability assumption. The instance and its good-bank event are
+unchanged for every independent private seed law.
+\end{proof}
+
+\section{All regimes and the single-instance choice}
+
+For arbitrary $D,\sigma>0$, choose
+\begin{equation}\label{eq:ell}
+ \ell=\min\!\left\{L,\frac{\sigma\sqrt K}{D\sqrt n}\right\}.
+\end{equation}
+This is a smoothness scale of the constructed instance; the algorithm
+still obeys the original cap $1/L$. It ensures
+\eqref{eq:scale-condition}. Let $M=\min\{A_0,N_1,N_2\}$.
+If $\ell=L$, \eqref{eq:mu} immediately gives $\mu D^2=\theta M$.
+If $\ell<L$, put $s_0=\sigma/(D\sqrt T)$. Then $\ell=Ks_0$,
+and the cubic term in \eqref{eq:mu} is exactly $s_0$. Thus
+$\mu=\theta s_0$. Moreover
+$\sigma^2K<L^2D^2n$ implies $N_1<A_0$ and $N_1<N_2$.
+We conclude in both cases that
+\begin{equation}\label{eq:mu-rate}
+ \mu D^2=\theta M,\qquad
+ \E\Phi(\widehat x)\ge\frac{M}{262144}.
+\end{equation}
+
+The other candidate is the identical scalar quadratic
+\begin{equation}\label{eq:quadratic}
+ f_i(x)=\frac\lambda2x^2,\qquad
+ \lambda=\frac{L}{2T},\qquad x_0=D,\qquad x_*=0.
+\end{equation}
+It is legal for every $\sigma\ge0$, since its optimum variance is
+zero. Along every allowed realized schedule,
+\[
+ x_t=D\prod_{j=0}^{t-1}(1-\lambda\eta_j)
+ \ge D\left(1-\sum_{j=0}^{t-1}\lambda\eta_j\right)\ge D/2.
+\]
+Here every factor lies in $[0,1]$, and the product bound follows
+inductively. Any scalar convex output therefore satisfies
+\begin{equation}\label{eq:quadratic-risk}
+ f(\widehat x)-f(0)\ge\frac{\lambda D^2}{8}=\frac{B_0}{16}.
+\end{equation}
+
+Choose between \eqref{eq:components} and \eqref{eq:quadratic} by
+comparing the two proved lower bounds, before any policy or randomness
+is chosen. Since $B_0+M\ge\Psi$,
+\[
+ \max\!\left\{\frac{M}{262144},\frac{B_0}{16}\right\}
+ \ge\frac{B_0+M}{524288}\ge\frac\Psi{524288}.
+\]
+This is one parameter-only witness, not an instance selected after
+observing the strategy. For $\sigma=0<D$, use only the quadratic;
+then $\Psi=B_0$. For $D=0$, $\Psi=0$, the quadratic is again legal,
+and returning $x_0$ achieves zero. These branches avoid all undefined
+cone parameters. The proof of Theorem~\ref{thm:main} is complete.
+
+\section{Verification and scope}
+
+The lower theorem has also been expressed in Lean~4 using Mathlib.
+Its final statement is
+\texttt{Gate149.FinalTheorem.}\allowbreak
+\texttt{one\_fixed\_instance\_fresh\_epoch\_lower}.
+It constructs an actual standard-Euclidean instance of dimension at
+most $n$ before quantifying over the seed space, probability law, and
+measurable full-bank selectors. The formal development includes the
+globally convex smooth objective, its actual gradient recursion,
+fixed-label simplex geometry, paid resets, interval trimming, parameter
+tuning, and the joint probability law. In particular, the finite uniform
+permutation-bank law is proved equal to the product of fresh uniform
+epoch laws. The final lower statement has been accepted by the Lean
+kernel, with its axiom report containing only \texttt{propext},
+\texttt{Classical.choice}, and \texttt{Quot.sound}.
+
+The formal lower and the inherited upper have different validation
+scopes. The proof of Liu's published upper theorem is not included in
+that development. Its minimax sandwich is an explicitly conditional
+formal corollary given the upper strategy, while Section~2 supplies
+the mathematical citation and tuning. No claim about priority or
+external assessment follows from kernel acceptance.
+
+The substantive lower-bound mechanism is the simultaneous pathwise
+charge \eqref{eq:paid}--\eqref{eq:interval}, followed by endpoint
+trimming. It prevents full-order information, adaptive scalar steps,
+and trajectory-selected convex averaging from improving the optimized
+worst-case rate on this class. This is a statement about the specified
+scalar-gradient model, not a limitation on all finite-sum optimization
+methods or a prediction of practical training performance.
+
+\begin{thebibliography}{9}
+\small
+\setlength{\itemsep}{4pt}
+
+\bibitem{liu2026}
+Zijian Liu.
+\newblock Random reshuffling dominates stochastic gradient descent.
+\newblock In \emph{Proceedings of the 39th Conference on Learning Theory},
+volume 336 of \emph{Proceedings of Machine Learning Research},
+pages 4859--4882, 2026.
+\newblock \url{https://proceedings.mlr.press/v336/liu26d.html}.
+
+\bibitem{cha2023}
+Jaeyoung Cha, Jaewook Lee, and Chulhee Yun.
+\newblock Tighter lower bounds for shuffling SGD: Random permutations
+and beyond.
+\newblock In \emph{Proceedings of the 40th International Conference on
+Machine Learning}, volume 202 of \emph{Proceedings of Machine Learning
+Research}, pages 3855--3912, 2023.
+\newblock \url{https://proceedings.mlr.press/v202/cha23a.html}.
+
+\bibitem{rajput2022}
+Shashank Rajput, Kangwook Lee, and Dimitris Papailiopoulos.
+\newblock Permutation-based SGD: Is random optimal?
+\newblock In \emph{International Conference on Learning Representations},
+2022.
+\newblock \url{https://openreview.net/forum?id=YiBa9HKTyXE}.
+\newblock Full version: \url{https://arxiv.org/abs/2102.09718v2}.
+
+\end{thebibliography}
+\end{document}
